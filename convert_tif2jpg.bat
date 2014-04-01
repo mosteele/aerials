@@ -105,3 +105,5 @@ SET /A runtime = end_secs - start_secs
 
 ECHO Runtime:
 ECHO %runtime% Seconds
+
+::Ran in ~22 hours on 4/1/14
