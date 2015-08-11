@@ -49,9 +49,10 @@ writeVrtToTiles() {
   in_file="$1"
   out_dir="$2"
 
-  gdal_translate \
+  gdal_retile.py \
     -co 'COMPRESS=JPEG' \
     -co 'TILED=YES' \
+    -p
     $ospn_vrt \
     $src_aerial_dir/output/script_workflow.tif
 }
