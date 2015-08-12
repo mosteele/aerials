@@ -1,109 +1,123 @@
 # !/bin/bash
 
+# This script preps a series of geotiff aerial imagery to be hosted by
+# GeoServer by smoothing through resampling, reprojection, tiling and
+# reducing file size
+
+# resources:
+# good stuff from paul ramsey on reducing the size of the tiffs without
+# losing visible image quality:
+# http://blog.cleverelephant.ca/2015/02/geotiff-compression-for-dummies.html
+
 src_aerial_dir='C:/Users/humphrig/Desktop/aerials_test'
-vrt_dir="$src_aerial_dir/vrt"
+src_vrt="${src_aerial_dir}/vrt/source_aerials.vrt"
+
+# delete a vrt directory if it exists, then recreate, this is in place
+# because some gdal tools can't overwrite existing vrt's
+vrt_dir="${src_aerial_dir}/vrt"
 rm -rf $vrt_dir
 mkdir $vrt_dir
 
-src_vrt="$src_aerial_dir/vrt/source_aerials.vrt"
-resampled_vrt="$src_aerial_dir/vrt/resampled_aerials.vrt"
-
 buildVrt() {
+  # create a virtual mosaic of the geotiffs, and only utilize the first
+  # three bands (r,g,b), the fourth band is infrared and is not needed
+
   echo 'building vrt from source aerials...'
 
   gdalbuildvrt \
+    -b 1 -b 2 -b 3 \
     $src_vrt \
-    $src_aerial_dir/*.tif
+    ${src_aerial_dir}/*.tif
 
   echo $'\n'
 }
 
-resampleImagery() {
-  echo 'resampling vrt using bilinear interpolation...'
+reprojectResampleImagery() {
+  # reproject and resample the mosaiced vrt using the parameters indicated
+  # below, bilinear has produced visually pleasing results for me in the past
 
-  gdalwarp \
-    -of 'VRT' \
-    -r bilinear \
-    $src_vrt \
-    $resampled_vrt
-
-  echo $'\n'
-}
-
-reprojectImagery() {
   target_epsg="$1"
-  reprojected_vrt="$2"
+  warped_vrt="$2"
+  resample_method='bilinear'
 
-  echo "reprojecting vrt to '${target_epsg}'..."
+  echo "reprojecting vrt to '${target_epsg}',"
+  echo "resampling vrt using '${resample_method}' method..."
 
   gdalwarp \
     -of 'VRT' \
     -t_srs "$target_epsg" \
-    $resampled_vrt \
-    $reprojected_vrt
+    -r "$resample_method" \
+    $src_vrt \
+    $warped_vrt
 
   echo $'\n'
 }
 
 writeVrtToTiles() {
-  in_file="$1"
-  out_dir="$2"
+  # Write the mosaiced vrt to more manageable subset geotiffs (tiles), the
+  # creation option below (-co) reduce the size of the files (compress,
+  # photometric) and internally tile them (tiled) so that smaller portions 
+  # of the file alone can be retrived when appropriate
+
+  mosaic_vrt="$1"
+  tile_dir="$2"
+  tile_pixels='22000'
+
+  # make sure gdal_retile has an empty directory to write to
+  rm -rf $tile_dir
+  mkdir $tile_dir
+
+  echo 'creating geotiff tiles from mosaic vrt,'
+  echo "tile size is: $tile_pixels x $tile_pixels pixels"
 
   gdal_retile.py \
+    -ps "$tile_pixels" "$tile_pixels" \
     -co 'COMPRESS=JPEG' \
+    -co 'PHOTOMETRIC=YCBCR' \
     -co 'TILED=YES' \
-    -p
-    $ospn_vrt \
-    $src_aerial_dir/output/script_workflow.tif
+    -targetDir $tile_dir \
+    $mosaic_vrt
+
+  echo $'\n'
 }
 
 addOverviews() {
-  geotiff_dir="$1"
+  # Overviews are lower resolution versions of the original image that are
+  # stored within the source file, applications can retrive these overviews
+  # at lower zoom levels in lieu of the original for faster loading times
 
-  for geotiff in $geotiff_dir/*.tif
-  do 
+  tile_dir="$1"
+
+  echo "adding overviews to geotiffs in the following directory: $tile_dir"
+
+  # config parameters below reduce the size of the overviews
+  for geotiff in ${tile_dir}/*.tif; do 
     gdaladdo \
-      -r gauss
-      --config 'COMPRESS_OVERVIEW JPEG' \
-      --config 'PHOTOMETRIC_OVERVIEW YCBCR' \
-      --config 'INTERLEAVE_OVERVIEW PIXEL' \
-      $geotiff
-      2 4 8 16 32 64 128 256 512
+      -r gauss \
+      --config COMPRESS_OVERVIEW JPEG \
+      --config PHOTOMETRIC_OVERVIEW YCBCR \
+      --config INTERLEAVE_OVERVIEW PIXEL \
+      $geotiff \
+      2 4 8 16 32 64 128
   done
+
+  echo $'\n'
 }
 
-buildVrt;
-resampleImagery;
+# buildVrt;
 
-oregon_spn='EPSG:2913'
-ospn_vrt="$src_aerial_dir/vrt/aerials_2913.vrt"
-ospn_dir="$src_aerial_dir/oregon_spn"
-reprojectImagery $oregon_spn $ospn_vrt;
-writeVrtToTiles $ospn_vrt $ospn_dir;
-# addOverviews $ospn_dir;
+# Create tiles in oregon state plane north projection (2913)
+# oregon_spn='EPSG:2913'
+# ospn_vrt="${vrt_dir}/aerials_2913.vrt"
+# ospn_dir="${src_aerial_dir}/oregon_spn"
+# reprojectResampleImagery $oregon_spn $ospn_vrt;
+# writeVrtToTiles $ospn_vrt $ospn_dir;
+addOverviews $ospn_dir;
 
+# Create tiles in web mercator projection (3857)
 # web_mercator='EPSG:3857'
-# web_merc_vrt='aerials_3857.vrt'
-# web_merc_dir="$src_aerial_dir/web_mercator"
+# web_merc_vrt="${vrt_dir}/aerials_3857.vrt"
+# web_merc_dir="${src_aerial_dir}/web_mercator"
 # reprojectImagery $web_mercator $web_merc_vrt;
 # writeVrtToTiles $web_merc_vrt $web_merc_dir;
 # addOverviews $web_merc_dir;
-
-# # these are commands being used previously:
-# gdalwarp \ 
-#   -r bilinear \
-#   -t_srs "EPSG:2913" \
-#   -co "TILED=YES" \
-#   -co "COMPRESS=JPEG" \
-#   $in_file \
-#   $out_file
-
-# wait
-
-# gdaladdo \
-#   -r gauss \
-#   $out_file \
-#   2 4 8 16 32 64 128 256 512
-
-# wait
-    # -co 'PHOTOMETRIC=YCBCR' \
