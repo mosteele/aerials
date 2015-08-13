@@ -9,15 +9,6 @@
 # losing visible image quality:
 # http://blog.cleverelephant.ca/2015/02/geotiff-compression-for-dummies.html
 
-src_aerial_dir='C:/Users/humphrig/Desktop/aerials_test'
-src_vrt="${src_aerial_dir}/vrt/source_aerials.vrt"
-
-# delete a vrt directory if it exists, then recreate, this is in place
-# because some gdal tools can't overwrite existing vrt's
-vrt_dir="${src_aerial_dir}/vrt"
-rm -rf $vrt_dir
-mkdir $vrt_dir
-
 buildVrt() {
   # create a virtual mosaic of the geotiffs, and only utilize the first
   # three bands (r,g,b), the fourth band is infrared and is not needed
@@ -54,29 +45,19 @@ reprojectResampleImagery() {
 }
 
 writeVrtToTiles() {
-  # Write the mosaiced vrt to more manageable subset geotiffs (tiles), the
-  # creation option below (-co) reduce the size of the files (compress,
-  # photometric) and internally tile them (tiled) so that smaller portions 
-  # of the file alone can be retrived when appropriate
+  # Write the mosaiced vrt to more manageable subset geotiffs (tiles), 
 
   mosaic_vrt="$1"
   tile_dir="$2"
-  tile_pixels='22000'
 
   # make sure gdal_retile has an empty directory to write to
   rm -rf $tile_dir
   mkdir $tile_dir
 
-  echo 'creating geotiff tiles from mosaic vrt,'
-  echo "tile size is: $tile_pixels x $tile_pixels pixels"
+  echo 'creating geotiff tiles from mosaic vrt...'
 
-  gdal_retile.py \
-    -ps "$tile_pixels" "$tile_pixels" \
-    -co 'COMPRESS=JPEG' \
-    -co 'PHOTOMETRIC=YCBCR' \
-    -co 'TILED=YES' \
-    -targetDir $tile_dir \
-    $mosaic_vrt
+  py_gdal_translate="${script_dir}/mosaic2tiles_w_gdal_translate.py"
+  python $py_gdal_translate $mosaic_vrt $tile_dir
 
   echo $'\n'
 }
@@ -104,20 +85,30 @@ addOverviews() {
   echo $'\n'
 }
 
-# buildVrt;
+script_dir='G:/PUBLIC/GIS_Projects/Aerials/git/aerials'
+src_aerial_dir='C:/Users/humphrig/Desktop/aerials_test'
+src_vrt="${src_aerial_dir}/vrt/aerials_mosaic.vrt"
 
-# Create tiles in oregon state plane north projection (2913)
-# oregon_spn='EPSG:2913'
-# ospn_vrt="${vrt_dir}/aerials_2913.vrt"
-# ospn_dir="${src_aerial_dir}/oregon_spn"
-# reprojectResampleImagery $oregon_spn $ospn_vrt;
-# writeVrtToTiles $ospn_vrt $ospn_dir;
+# delete a vrt directory if it exists, then recreate, this is in place
+# because some gdal tools can't overwrite existing vrt's
+vrt_dir="${src_aerial_dir}/vrt"
+rm -rf $vrt_dir
+mkdir $vrt_dir
+
+buildVrt;
+
+# create tiles in oregon state plane north projection (2913)
+oregon_spn='EPSG:2913'
+ospn_vrt="${vrt_dir}/aerials_2913.vrt"
+ospn_dir="${src_aerial_dir}/oregon_spn"
+reprojectResampleImagery $oregon_spn $ospn_vrt;
+writeVrtToTiles $ospn_vrt $ospn_dir;
 addOverviews $ospn_dir;
 
-# Create tiles in web mercator projection (3857)
-# web_mercator='EPSG:3857'
-# web_merc_vrt="${vrt_dir}/aerials_3857.vrt"
-# web_merc_dir="${src_aerial_dir}/web_mercator"
-# reprojectImagery $web_mercator $web_merc_vrt;
-# writeVrtToTiles $web_merc_vrt $web_merc_dir;
-# addOverviews $web_merc_dir;
+# create tiles in web mercator projection (3857)
+web_mercator='EPSG:3857'
+web_merc_vrt="${vrt_dir}/aerials_3857.vrt"
+web_merc_dir="${src_aerial_dir}/web_mercator"
+reprojectResampleImagery $web_mercator $web_merc_vrt;
+writeVrtToTiles $web_merc_vrt $web_merc_dir;
+addOverviews $web_merc_dir;
