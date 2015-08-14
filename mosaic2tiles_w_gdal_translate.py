@@ -4,7 +4,8 @@ import subprocess
 from os import path
 from osgeo import gdal
 
-# reference:
+# some of the gdal-python stuff here was derived from below, thanks to
+# Even Rouault for pointing me to this:
 # http://download.osgeo.org/gdal/workshop/foss4ge2015/workshop_gdal.html#__RefHeading__5909_1333016408
 
 # get vrt path and target tile directory from command line parameters
@@ -27,9 +28,15 @@ creation_ops = '{0} {1} {2}'.format(co1, co2, co3)
 srcwin_template = '-srcwin {0} {1} {2} {3}'
 gdal_template = 'gdal_translate {0} {1} {2} {3}'
 
-y = 0
-default_px = 22000
+# given that pixels are 1/4 of a foot in this case the following tile
+# sizes result in the paired units (note the output will not align with
+# official government boundaries for these units):
+# 10,560 px = quarter section
+# 21,120 px = section
+# 42,240 px = foursect
+default_px = 42240
 
+y = 0
 while y < vrt_y:
 	x = 0
 	if y + default_px < vrt_y:
@@ -37,13 +44,13 @@ while y < vrt_y:
 	else:
 		tile_y = vrt_y - y 
 
-	while x < 40000: #vrt_x:
+	while x < vrt_x:
 		if x + default_px < vrt_x:
 			tile_x = default_px
 		else:
 			tile_x = vrt_x - x
 
-		srcwin = srcwin_template.format(x, y, tile_x, default_px)
+		srcwin = srcwin_template.format(x, y, tile_x, tile_y)
 
 		row = int(math.ceil(y/default_px))
 		col = int(math.ceil(x/default_px))
@@ -56,5 +63,4 @@ while y < vrt_y:
 
 		x += default_px
 
-	break
 	y += default_px

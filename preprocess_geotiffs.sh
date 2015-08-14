@@ -13,11 +13,13 @@ buildVrt() {
   # create a virtual mosaic of the geotiffs, and only utilize the first
   # three bands (r,g,b), the fourth band is infrared and is not needed
 
+  mosaic_vrt="$1"
+
   echo 'building vrt from source aerials...'
 
   gdalbuildvrt \
     -b 1 -b 2 -b 3 \
-    $src_vrt \
+    $mosaic_vrt \
     ${src_aerial_dir}/*.tif
 
   echo $'\n'
@@ -38,7 +40,7 @@ reprojectResampleImagery() {
     -of 'VRT' \
     -t_srs "$target_epsg" \
     -r "$resample_method" \
-    $src_vrt \
+    $mosaic_vrt \
     $warped_vrt
 
   echo $'\n'
@@ -85,30 +87,32 @@ addOverviews() {
   echo $'\n'
 }
 
-script_dir='G:/PUBLIC/GIS_Projects/Aerials/git/aerials'
-src_aerial_dir='C:/Users/humphrig/Desktop/aerials_test'
-src_vrt="${src_aerial_dir}/vrt/aerials_mosaic.vrt"
+project_dir='G:/PUBLIC/GIS_Projects/Aerials'
+script_dir="${project_dir}/git/aerials"
+src_aerial_dir='E:/compressed4band/3in'
+# src_aerial_dir='C:/Users/humphrig/Desktop/aerials_test'
 
 # delete a vrt directory if it exists, then recreate, this is in place
 # because some gdal tools can't overwrite existing vrt's
-vrt_dir="${src_aerial_dir}/vrt"
+vrt_dir="${project_dir}/web_merc_2014/vrt"
 rm -rf $vrt_dir
 mkdir $vrt_dir
 
-buildVrt;
+mosaic_vrt="${vrt_dir}/aerials_mosaic.vrt"
+buildVrt $mosaic_vrt;
 
-# create tiles in oregon state plane north projection (2913)
-oregon_spn='EPSG:2913'
-ospn_vrt="${vrt_dir}/aerials_2913.vrt"
-ospn_dir="${src_aerial_dir}/oregon_spn"
-reprojectResampleImagery $oregon_spn $ospn_vrt;
-writeVrtToTiles $ospn_vrt $ospn_dir;
-addOverviews $ospn_dir;
+# # create tiles in oregon state plane north projection (2913)
+# oregon_spn='EPSG:2913'
+# ospn_vrt="${vrt_dir}/aerials_2913.vrt"
+# ospn_dir="${src_aerial_dir}/oregon_spn"
+# reprojectResampleImagery $oregon_spn $ospn_vrt;
+# writeVrtToTiles $ospn_vrt $ospn_dir;
+# addOverviews $ospn_dir;
 
 # create tiles in web mercator projection (3857)
-web_mercator='EPSG:3857'
-web_merc_vrt="${vrt_dir}/aerials_3857.vrt"
-web_merc_dir="${src_aerial_dir}/web_mercator"
-reprojectResampleImagery $web_mercator $web_merc_vrt;
-writeVrtToTiles $web_merc_vrt $web_merc_dir;
-addOverviews $web_merc_dir;
+# web_mercator='EPSG:3857'
+# web_merc_vrt="${vrt_dir}/aerials_3857.vrt"
+# web_merc_dir="${project_dir}/web_merc_2014"
+# reprojectResampleImagery $web_mercator $web_merc_vrt;
+# writeVrtToTiles $web_merc_vrt $web_merc_dir;
+# addOverviews $web_merc_dir;
