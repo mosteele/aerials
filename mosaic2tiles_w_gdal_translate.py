@@ -51,7 +51,6 @@ while y < vrt_y:
 			tile_x = vrt_x - x
 
 		srcwin = srcwin_template.format(x, y, tile_x, tile_y)
-
 		row = int(math.ceil(y/default_px))
 		col = int(math.ceil(x/default_px))
 		tile_name = '{0}_{1}_{2}.tif'.format(tile_basename, row, col)
@@ -62,5 +61,4 @@ while y < vrt_y:
 		subprocess.call(gdal_cmd)
 
 		x += default_px
-
 	y += default_px

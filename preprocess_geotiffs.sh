@@ -11,16 +11,24 @@
 
 buildVrt() {
   # create a virtual mosaic of the geotiffs, and only utilize the first
-  # three bands (r,g,b), the fourth band is infrared and is not needed
+  # three bands (r,g,b), the fourth band is infrared and is not needed=
+
+  echo 'generating text file containing input geotiffs...'
 
   mosaic_vrt="$1"
+  geotiff_list="${vrt_dir}/geotiff_input_list.txt"
+
+  # gdalbuildvrt can't handle a huge number of input files as direct input,
+  # in these cases they must be submitted as text file which is being 
+  # generated here
+  find ${src_aerial_dir}/*.tif > $geotiff_list
 
   echo 'building vrt from source aerials...'
 
   gdalbuildvrt \
     -b 1 -b 2 -b 3 \
-    $mosaic_vrt \
-    ${src_aerial_dir}/*.tif
+    -input_file_list $geotiff_list \
+    $mosaic_vrt
 
   echo $'\n'
 }
@@ -52,9 +60,9 @@ writeVrtToTiles() {
   mosaic_vrt="$1"
   tile_dir="$2"
 
-  # make sure gdal_retile has an empty directory to write to
-  rm -rf $tile_dir
-  mkdir $tile_dir
+  # make sure the target tile directory is empty
+  mkdir -p $tile_dir
+  rm ${tile_dir}/*.tif
 
   echo 'creating geotiff tiles from mosaic vrt...'
 
@@ -81,7 +89,7 @@ addOverviews() {
       --config PHOTOMETRIC_OVERVIEW YCBCR \
       --config INTERLEAVE_OVERVIEW PIXEL \
       $geotiff \
-      2 4 8 16 32 64 128
+      2 4 8 16 32 64 128 256
   done
 
   echo $'\n'
@@ -96,23 +104,23 @@ src_aerial_dir='E:/compressed4band/3in'
 # because some gdal tools can't overwrite existing vrt's
 vrt_dir="${project_dir}/web_merc_2014/vrt"
 rm -rf $vrt_dir
-mkdir $vrt_dir
+mkdir -p $vrt_dir
 
 mosaic_vrt="${vrt_dir}/aerials_mosaic.vrt"
 buildVrt $mosaic_vrt;
 
-# # create tiles in oregon state plane north projection (2913)
-# oregon_spn='EPSG:2913'
-# ospn_vrt="${vrt_dir}/aerials_2913.vrt"
-# ospn_dir="${src_aerial_dir}/oregon_spn"
-# reprojectResampleImagery $oregon_spn $ospn_vrt;
-# writeVrtToTiles $ospn_vrt $ospn_dir;
-# addOverviews $ospn_dir;
+# create tiles in oregon state plane north projection (2913)
+oregon_spn='EPSG:2913'
+ospn_vrt="${vrt_dir}/aerials_2913.vrt"
+ospn_dir="${project_dir}/oregon_spn_2014"
+reprojectResampleImagery $oregon_spn $ospn_vrt;
+writeVrtToTiles $ospn_vrt $ospn_dir;
+addOverviews $ospn_dir;
 
 # create tiles in web mercator projection (3857)
-# web_mercator='EPSG:3857'
-# web_merc_vrt="${vrt_dir}/aerials_3857.vrt"
-# web_merc_dir="${project_dir}/web_merc_2014"
-# reprojectResampleImagery $web_mercator $web_merc_vrt;
-# writeVrtToTiles $web_merc_vrt $web_merc_dir;
-# addOverviews $web_merc_dir;
+web_mercator='EPSG:3857'
+web_merc_vrt="${vrt_dir}/aerials_3857.vrt"
+web_merc_dir="${project_dir}/web_merc_2014"
+reprojectResampleImagery $web_mercator $web_merc_vrt;
+writeVrtToTiles $web_merc_vrt $web_merc_dir;
+addOverviews $web_merc_dir;
