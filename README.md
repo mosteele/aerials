@@ -1,7 +1,7 @@
 aerials
 =======
 
-scripts for processing aerial imagery
+Scripts for processing aerial imagery.  These operations include changes of format, compression, addition of overviews, reprojection, resampling and retiling.
 
 reference:
 --------
