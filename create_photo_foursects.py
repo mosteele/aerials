@@ -1,7 +1,7 @@
 # resources:
 # http://gis.stackexchange.com/questions/149959/dissolve-polygons-based-on-attributes-with-python-shapely-fiona
 # http://www.macwright.org/2012/10/31/gis-with-python-shapely-fiona.html
-# plus shapely and fiona documentation
+# plus shapely and fiona docs
 
 import fiona
 from os import path
