@@ -10,8 +10,9 @@
 # http://blog.cleverelephant.ca/2015/02/geotiff-compression-for-dummies.html
 
 buildVrt() {
-  # create a virtual mosaic of the geotiffs, and only utilize the first
-  # three bands (r,g,b), the fourth band is infrared and is not needed=
+  # create a virtual mosaic of the geotiffs, this will be easier to work
+  # with than many separate files and eliminates the need too repeatedly
+  # execute some of the later tasks
 
   echo $'generating text file containing input geotiff paths...\n'
 
@@ -25,8 +26,14 @@ buildVrt() {
 
   echo 'building mosaic vrt from source aerials...'
 
+  # within the vrt utilize only the first three bands (r,g,b), the fourth 
+  # band is infrared and is not needed, nodata in the source data is white
+  # settings here switch it to black
   gdalbuildvrt \
     -b 1 -b 2 -b 3 \
+    -srcnodata "255 255 255" \
+    -hidenodata \
+    -vrtnodata "0 0 0" \
     -input_file_list $geotiff_list \
     $mosaic_vrt
 
@@ -101,14 +108,12 @@ addOverviews() {
 project_dir='G:/PUBLIC/GIS_Projects/Aerials'
 script_dir="${project_dir}/git/aerials"
 src_aerial_dir='E:/compressed4band/3in'
-# src_aerial_dir='C:/Users/humphrig/Desktop/aerials_test'
 
 # create a directory to hold vrt's if it doesn't yet exist
 vrt_dir="${project_dir}/vrt"
 mkdir -p $vrt_dir
-
 mosaic_vrt="${vrt_dir}/aerials_mosaic.vrt"
-# buildVrt $mosaic_vrt;
+buildVrt $mosaic_vrt;
 
 # # create tiles in oregon state plane north projection (2913)
 # oregon_spn='EPSG:2913'
@@ -122,6 +127,6 @@ mosaic_vrt="${vrt_dir}/aerials_mosaic.vrt"
 web_mercator='EPSG:3857'
 web_merc_vrt="${vrt_dir}/aerials_3857.vrt"
 web_merc_dir="${project_dir}/web_merc_2014"
-# reprojectResampleImagery $web_mercator $web_merc_vrt;
-# writeVrtToTiles $web_merc_vrt $web_merc_dir;
+reprojectResampleImagery $web_mercator $web_merc_vrt;
+writeVrtToTiles $web_merc_vrt $web_merc_dir;
 addOverviews $web_merc_dir;
