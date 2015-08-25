@@ -108,7 +108,7 @@ vrt_dir="${project_dir}/vrt"
 mkdir -p $vrt_dir
 
 mosaic_vrt="${vrt_dir}/aerials_mosaic.vrt"
-buildVrt $mosaic_vrt;
+# buildVrt $mosaic_vrt;
 
 # # create tiles in oregon state plane north projection (2913)
 # oregon_spn='EPSG:2913'
@@ -118,10 +118,10 @@ buildVrt $mosaic_vrt;
 # writeVrtToTiles $ospn_vrt $ospn_dir;
 # addOverviews $ospn_dir;
 
-# # create tiles in web mercator projection (3857)
-# web_mercator='EPSG:3857'
-# web_merc_vrt="${vrt_dir}/aerials_3857.vrt"
-# web_merc_dir="${project_dir}/web_merc_2014"
+# create tiles in web mercator projection (3857)
+web_mercator='EPSG:3857'
+web_merc_vrt="${vrt_dir}/aerials_3857.vrt"
+web_merc_dir="${project_dir}/web_merc_2014"
 # reprojectResampleImagery $web_mercator $web_merc_vrt;
 # writeVrtToTiles $web_merc_vrt $web_merc_dir;
-# addOverviews $web_merc_dir;
+addOverviews $web_merc_dir;
