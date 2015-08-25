@@ -57,7 +57,6 @@ with fiona.open(photo_foursects) as foursects:
 		# bounding box is a returned as a tuple like: 
 		# (x-min, y-min, x-max, y-max)		
 		b_box = geom.bounds
-		print b_box
 
 		# if the bounding box coordinates need to be reprojected, turn them
 		# into two points (lower left & upper right corners), reproject those
@@ -72,8 +71,6 @@ with fiona.open(photo_foursects) as foursects:
 				
 				ogr_pt.Transform(transform)
 				b_box.extend([ogr_pt.GetX(), ogr_pt.GetY()])
-
-			print b_box
 		
 		# the bounding box coordinates must be in the following order for
 		# gdal_translate: x-min, y-max, x-max, y-min which is different
