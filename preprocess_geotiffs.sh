@@ -8,6 +8,7 @@
 # good stuff from paul ramsey on reducing the size of the tiffs without
 # losing visible image quality:
 # http://blog.cleverelephant.ca/2015/02/geotiff-compression-for-dummies.html
+# http://gis.stackexchange.com/questions/120/make-the-nodata-area-of-a-resampled-orthophoto-overview-white
 
 buildVrt() {
   # create a virtual mosaic of the geotiffs, this will be easier to work
@@ -28,12 +29,12 @@ buildVrt() {
 
   # within the vrt utilize only the first three bands (r,g,b), the fourth 
   # band is infrared and is not needed, nodata in the source data is white
-  # settings here switch it to black
+  # settings here make new nodata match that
   gdalbuildvrt \
     -b 1 -b 2 -b 3 \
-    -srcnodata "255 255 255" \
     -hidenodata \
-    -vrtnodata "0 0 0" \
+    -vrtnodata '255 255 255' \
+    --config GDAL_MAXCACHE 1000 \
     -input_file_list $geotiff_list \
     $mosaic_vrt
 
@@ -54,10 +55,15 @@ reprojectResampleImagery() {
   echo "reprojecting vrt to '${target_epsg}',"
   echo "resampling vrt using '${resample_method}' method..."
 
+  # -wm and --config gdal_maxcache settings give gdal warp more memory and
+  # thus speed up processing
   gdalwarp \
     -of 'VRT' \
     -t_srs "$target_epsg" \
     -r "$resample_method" \
+    -wo 'SKIP_NOSOURCE=YES' \
+    -wm '500' \
+    --config GDAL_MAXCACHE 512 \
     $mosaic_vrt \
     $warped_vrt
 
@@ -91,7 +97,7 @@ addOverviews() {
 
   echo "adding overviews to geotiffs in the following directory: $tile_dir"
 
-  # config parameters below reduce the size of the overviews
+  # the three config parameters below reduce the size of the overviews
   for geotiff in ${tile_dir}/*.tif; do 
     gdaladdo \
       -r gauss \
@@ -126,7 +132,7 @@ buildVrt $mosaic_vrt;
 # create tiles in web mercator projection (3857)
 web_mercator='EPSG:3857'
 web_merc_vrt="${vrt_dir}/aerials_3857.vrt"
-web_merc_dir="${project_dir}/web_merc_2014"
+web_merc_dir="${project_dir}/web_merc_2014/test"
 reprojectResampleImagery $web_mercator $web_merc_vrt;
-writeVrtToTiles $web_merc_vrt $web_merc_dir;
-addOverviews $web_merc_dir;
+time writeVrtToTiles $web_merc_vrt $web_merc_dir;
+time addOverviews $web_merc_dir;

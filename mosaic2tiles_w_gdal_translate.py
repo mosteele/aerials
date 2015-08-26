@@ -26,8 +26,9 @@ co1 = '-co "COMPRESS=JPEG"'
 co2 = '-co "PHOTOMETRIC=YCBCR"'
 co3 = '-co "TILED=YES"'
 creation_ops = '{0} {1} {2}'.format(co1, co2, co3)
+cache_max = '--config GDAL_CACHEMAX 1000'
 projwin_srs = '-projwin_srs "EPSG:2913"'
-gdal_template = 'gdal_translate {0} {1} {2} {3}'
+gdal_template = 'gdal_translate {0} {1} {2} {3} {4}'
 
 # Get the epsg of the projected coordinate system of the input vrt
 vrt = gdal.Open(vrt_path)
@@ -81,7 +82,9 @@ with fiona.open(photo_foursects) as foursects:
 		projwin = '-projwin {0}'.format(' '.join(pwin_coords))
 		tile_path = path.join(tile_dir, '{0}.tif'.format(fs_name))
 		gdal_cmd = gdal_template.format(projwin, creation_ops, 
-			vrt_path, tile_path)
+			cache_max, vrt_path, tile_path)
 		
 		print '\n', gdal_cmd
 		subprocess.call(gdal_cmd)
+
+		break
