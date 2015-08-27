@@ -86,5 +86,3 @@ with fiona.open(photo_foursects) as foursects:
 		
 		print '\n', gdal_cmd
 		subprocess.call(gdal_cmd)
-
-		break

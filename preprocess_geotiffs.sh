@@ -132,7 +132,7 @@ buildVrt $mosaic_vrt;
 # create tiles in web mercator projection (3857)
 web_mercator='EPSG:3857'
 web_merc_vrt="${vrt_dir}/aerials_3857.vrt"
-web_merc_dir="${project_dir}/web_merc_2014/test"
+web_merc_dir="${project_dir}/web_merc_2014"
 reprojectResampleImagery $web_mercator $web_merc_vrt;
 time writeVrtToTiles $web_merc_vrt $web_merc_dir;
 time addOverviews $web_merc_dir;
