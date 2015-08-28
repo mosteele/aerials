@@ -84,5 +84,9 @@ with fiona.open(photo_foursects) as foursects:
 		gdal_cmd = gdal_template.format(projwin, creation_ops, 
 			cache_max, vrt_path, tile_path)
 		
+		# flush is used here so print statements will be sent directly to 
+		# a log file, without this they collect and are written intermittently
 		print '\n', gdal_cmd
+		sys.stdout.flush()
+		
 		subprocess.call(gdal_cmd)
