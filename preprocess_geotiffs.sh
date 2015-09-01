@@ -111,6 +111,8 @@ addOverviews() {
   echo $'\n'
 }
 
+date
+
 project_dir='G:/PUBLIC/GIS_Projects/Aerials'
 script_dir="${project_dir}/git/aerials"
 src_aerial_dir='E:/compressed4band/3in'
@@ -121,18 +123,18 @@ mkdir -p $vrt_dir
 mosaic_vrt="${vrt_dir}/aerials_mosaic.vrt"
 buildVrt $mosaic_vrt;
 
-# # create tiles in oregon state plane north projection (2913)
-# oregon_spn='EPSG:2913'
-# ospn_vrt="${vrt_dir}/aerials_2913.vrt"
-# ospn_dir="${project_dir}/oregon_spn_2014"
-# reprojectResampleImagery $oregon_spn $ospn_vrt;
-# writeVrtToTiles $ospn_vrt $ospn_dir;
-# addOverviews $ospn_dir;
+# create tiles in oregon state plane north projection (2913)
+oregon_spn='EPSG:2913'
+ospn_vrt="${vrt_dir}/aerials_2913.vrt"
+ospn_dir="${project_dir}/oregon_spn_2014"
+reprojectResampleImagery $oregon_spn $ospn_vrt;
+time writeVrtToTiles $ospn_vrt $ospn_dir;
+time addOverviews $ospn_dir;
 
-# create tiles in web mercator projection (3857)
-web_mercator='EPSG:3857'
-web_merc_vrt="${vrt_dir}/aerials_3857.vrt"
-web_merc_dir="${project_dir}/web_merc_2014"
-reprojectResampleImagery $web_mercator $web_merc_vrt;
-time writeVrtToTiles $web_merc_vrt $web_merc_dir;
-time addOverviews $web_merc_dir;
+# # create tiles in web mercator projection (3857)
+# web_mercator='EPSG:3857'
+# web_merc_vrt="${vrt_dir}/aerials_3857.vrt"
+# web_merc_dir="${project_dir}/web_merc_2014"
+# reprojectResampleImagery $web_mercator $web_merc_vrt;
+# time writeVrtToTiles $web_merc_vrt $web_merc_dir;
+# time addOverviews $web_merc_dir;
