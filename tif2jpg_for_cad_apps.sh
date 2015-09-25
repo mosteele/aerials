@@ -1,4 +1,6 @@
-# Grant Humphries for TriMet, 2014
+# !/bin/bash
+
+# Grant Humphries for TriMet, 2014-15
 # GDAL version: 1.11.2
 # Python version: 2.7.8 (32-bit) 
 # ---------------------------------
@@ -60,8 +62,21 @@ copyAerialShps() {
 	done
 } 
 
-updateProductionCurrentFiles() {
-	
+updateGrantPermissionsToProduction() {
+	msg1='Are you sure you want to replace the existing production'
+	msg2='aerials?  Press enter to continue, ctrl+c to quit'
+	read -p ${msg1} ${msg2}
+
+	rm -rf $production_dir
+	mv $dst_staging_dir $production_dir
+
+	# Grant read and execute permissions on the production folder to 
+	# the user 'Everyone'.  The ':r' on the grant action replaces
+	# any previous permissions, ':RX' is read, execute the '/t' flag
+	# makes the action recurse to any children and '/q' flag suppresses
+	# success messages.  Within double forward slashes the first slash
+	# escapes the second as this is a Windows command
+	icacls ${production_dir} //grant:r Everyone:RX //t //q
 }
 
 src_aerials_dir='E:'
@@ -76,13 +91,8 @@ mkdir -p $tmp_dst_aerials_tif_dir
 vrt_dir='C:/Users/humphrig/Desktop/temp'
 mkdir -p $vrt_dir
 
-convertTif2Jpg $src_aerials_tif_dir $dst_staging_dir;
+time convertTif2Jpg $src_aerials_tif_dir $dst_staging_dir;
 copyAerialShps $src_aerials_shp_dir $dst_staging_dir
+updateGrantPermissionsToProduction;
 
-
-# ******Once this script has run be sure to set the permission on the 
-# 'New_Current' folder to 'Everyone'******
-
-# *******don't forget to time the script******
-
-::Ran in ~22 hours on 4/1/14
+# ols version of script ran in ~22 hours on 4/1/14
