@@ -5,6 +5,8 @@
 # Python version: 2.7.8 (32-bit) 
 # ---------------------------------
 
+
+
 convertTif2Jpg() {
 	src_tiff_dir="$1"
 	dst_tiff_dir="$2"
@@ -94,5 +96,3 @@ mkdir -p $vrt_dir
 time convertTif2Jpg $src_aerials_tif_dir $dst_staging_dir;
 copyAerialShps $src_aerials_shp_dir $dst_staging_dir
 updateGrantPermissionsToProduction;
-
-# ols version of script ran in ~22 hours on 4/1/14

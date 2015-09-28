@@ -1,5 +1,5 @@
 # Resources:
-# thanks to Even Rouault for pointing to the first link:
+# thanks to Even Rouault for pointing me to the first link:
 # http://download.osgeo.org/gdal/workshop/foss4ge2015/workshop_gdal.html#__RefHeading__5909_1333016408
 # http://gis.stackexchange.com/questions/7608/shapefile-prj-to-postgis-srid-lookup-table/7615#7615
 # https://pcjericks.github.io/py-gdalogr-cookbook/projection.html
