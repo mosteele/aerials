@@ -15,7 +15,7 @@ from shapely.geometry import shape
 aerials_dir = '//gisstore/gis/PUBLIC/GIS_Projects/Aerials'
 photo_foursects = path.join(aerials_dir, 'shp', 'photo_foursects.shp')
 
-# # get vrt path and target tile directory from command line parameters
+# get vrt path and target tile directory from command line parameters
 vrt_path = path.abspath(sys.argv[1])
 tile_dir = path.abspath(sys.argv[2])
 
@@ -27,7 +27,6 @@ co2 = '-co "PHOTOMETRIC=YCBCR"'
 co3 = '-co "TILED=YES"'
 creation_ops = '{0} {1} {2}'.format(co1, co2, co3)
 cache_max = '--config GDAL_CACHEMAX 1000'
-projwin_srs = '-projwin_srs "EPSG:2913"'
 gdal_template = 'gdal_translate {0} {1} {2} {3} {4}'
 
 # Get the epsg of the projected coordinate system of the input vrt

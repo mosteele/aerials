@@ -5,94 +5,119 @@
 # Python version: 2.7.8 (32-bit) 
 # ---------------------------------
 
+buildMosaicVrt() {
+	# create a virtual mosaic of the geotiffs, this will be easier to work
+	# with than many separate files and eliminates the need too repeatedly
+	# execute some of the later tasks
 
+	mosaic_vrt="$1"
+	aerials_dir="$2"
+	resolution="$3" # should be indicated in input raster units
 
-convertTif2Jpg() {
-	src_tiff_dir="$1"
-	dst_tiff_dir="$2"
+	# resolution parameter is supplied set resolution options
+	if [ -z $resolution ]
+		then
+			res_options=''
+		else
+			res_options="-tr $resolution $resolution -tap"
+	fi
 
-	# For each .tif take the file name and truncate it down to its first 
-	# four letters.  Then create a new folder with that name in the output
-	# directory when unique.  Within these tiff files the first four letters
-	# identify the township that they belong to
-	for tif_file in "$src_tiff_dir/*.tif"; do
-		township_dir="${dst_tiff_dir}/${tif_file:0:4}"
-		mkdir -p $township_dir
+	echo 'building mosaic vrt from source aerials...'
 
-		# Convert each aerial into the Oregon State Plane North Projection
-		# and put the output into the newly created sub-folder.  The 
-		# 'TILED=YES' internally tiles the image so it can read in chunks 
-		# and 'COMPRESS=JPEG' reduces the file size 
-		vrt_file=${tif_file/.tif/.vrt}
+	# nodata in the source data is white settings here make new nodata match
+	gdalbuildvrt \
+		$res_options \
+		-hidenodata \
+		-vrtnodata '255 255 255' \
+		--config GDAL_MAXCACHE 1000 \
+		$mosaic_vrt \
+		${aerials_dir}/*.tif
 
-		gdalwarp \
-			-of 'VRT' \
-			-t_srs 'EPSG:2913' \
-			${src_tiff_dir}/${tif_file} \
-			${vrt_dir}/${vrt_file}
+	echo $'\n'
+}
 
-		# Convert the reprojected imagery into .jpg format.  The first command 
-		# below replaces the .tif at the end of the file name with .jpg in a
-		# new variable.  'WORLDFILE=YES' create a files that has the image's
-		# spatial reference information
-		jpeg_file=${tif_file/.tif/.jpg}
-		
-		gdal_translate \
-			-of 'JPEG' \
-			-co 'TILED=YES' \
-			-co 'COMPRESS=JPEG' \
-			-co 'WORLDFILE=YES' \
-			${vrt_dir}/${vrt_file} \
-			${township_dir}/${jpeg_file}
-	done
+extractJpgTiles() {
+	mosaic_vrt="$1"
+	dst_jpg_dir="$2"
+	tile_unit="$3"
+
+	echo 'creating jpeg tiles from mosaic vrt...'
+
+	extract_script="${code_dir}/cad/extract_jpg_tiles_from_vrt.py"
+	python $extract_script $mosaic_vrt $dst_jpg_dir $tile_unit
+
+	echo $'\n'
 }
 
 copyAerialShps() {
 	# Add shapefiles that describe the geospatial position of the aerials
 	# to the target directory structure
 	src_shp_dir="$1"
-	dst_shp_dir="$2/shapefiles"
-	sub_dirs=('flightlines' 'project_area' 'photo_centers')
-
+	dst_shp_dir="$2"
 	mkdir -p $dst_shp_dir
 
+	echo 'copying over related aerial shapefiles...'
+
+	sub_dirs=('flightlines' 'project_area' 'photo_centers')
 	for sd in "${sub_dirs[@]}"; do
 		shp_sub_dir="${src_shp_dir}/${sd}"
-		for shp_file in "${shp_sub_dir}/*"; do
-			cp "${shp_sub_dir}/${shp_file}" "${dst_shp_dir}/${shp_file}"
+		
+		for shp_file in $shp_sub_dir/*; do
+			if [ -f "$shp_file" ]; then
+				echo $shp_file
+
+				basename=${shp_file##*/}
+				cp $shp_file "${dst_shp_dir}/${basename}"
+			fi
 		done
 	done
+
+	echo $'\n'
 } 
 
 updateGrantPermissionsToProduction() {
 	msg1='Are you sure you want to replace the existing production'
-	msg2='aerials?  Press enter to continue, ctrl+c to quit'
-	read -p ${msg1} ${msg2}
+	msg2=$'aerials?  Press enter to continue, ctrl+c to quit:\n'
+	read -p "${msg1} ${msg2}"
 
-	rm -rf $production_dir
-	mv $dst_staging_dir $production_dir
+	# get the last modified year from a random jpeg in the current dir
+	random_jpg="$(ls -R ${current_dir}/*/*.jpg | head -n 1)"
+	jpg_year="$(date +%Y -r $random_jpg)"
+	current_year="$(date +%Y)"
 
-	# Grant read and execute permissions on the production folder to 
-	# the user 'Everyone'.  The ':r' on the grant action replaces
-	# any previous permissions, ':RX' is read, execute the '/t' flag
-	# makes the action recurse to any children and '/q' flag suppresses
-	# success messages.  Within double forward slashes the first slash
-	# escapes the second as this is a Windows command
-	icacls ${production_dir} //grant:r Everyone:RX //t //q
+	# if the data in the current directory was modified in the current
+	# year move it and replace it with the staging data
+	if [ "$jpeg_year" -lt "$current_year" ]; then
+		last_year="$(expr $jpeg_year - 1)"
+		mv -f $current_dir "${production_dir}/${last_year}_July"
+		mv $staging_dir $current_dir
+
+		# Grant read and execute permissions on the production folder 
+		# to the user 'Everyone'.  The ':r' on the grant action replaces
+		# any previous permissions, ':RX' is read, execute the '/t' flag
+		# makes the action recurse to any children and '/q' flag 
+		# suppresses success messages.  Within double forward slashes the
+		# first slash escapes the second as this is a Windows command
+		icacls ${current_dir} //grant:r Everyone:RX //t //q
+	fi
 }
 
-src_aerials_dir='E:'
-src_aerials_shp_dir="${src_aerials_dir}/admin"
-src_aerials_tif_dir="${src_aerials_dir}/compressed4band/3in"
+project_dir='G:/PUBLIC/GIS_Projects/Aerials'
+code_dir="${project_dir}/git/aerials"
+ospn_tiles="${project_dir}/oregon_spn_2014"
+production_dir='G:/AERIALS'
+staging_dir="${production_dir}/tempCurrent"
+current_dir="${production_dir}/Current"
 
-dst_aerials_dir='G:/AERIALS'
-dst_staging_dir="${dst_aerials_dir}/tempCurrent"
-production_dir="${dst_aerials_dir}/Current"
-mkdir -p $tmp_dst_aerials_tif_dir
+resolution='0.5' # feet
+six_inch_vrt="${project_dir}/vrt/six_inch_for_jpg.vrt"
+# buildMosaicVrt $six_inch_vrt $ospn_tiles $resolution;
 
-vrt_dir='C:/Users/humphrig/Desktop/temp'
-mkdir -p $vrt_dir
+sections='SECTION'
+time extractJpgTiles $six_inch_vrt $staging_dir $sections;
 
-time convertTif2Jpg $src_aerials_tif_dir $dst_staging_dir;
-copyAerialShps $src_aerials_shp_dir $dst_staging_dir
-updateGrantPermissionsToProduction;
+src_shp_dir='E:/admin'
+dst_shp_dir="${staging_dir}/shp"
+copyAerialShps $src_shp_dir $dst_shp_dir;
+
+# updateGrantPermissionsToProduction;
