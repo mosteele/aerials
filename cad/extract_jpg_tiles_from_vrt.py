@@ -37,7 +37,9 @@ def createTranformation():
 	return transform
 
 def getPixelSizeCode():
-	""""""
+	"""Use gdal to get the pixel size of the source raster and convert
+	that into the a character code that will be used in the tile file
+	names"""
 
 	vrt = gdal.Open(vrt_path)
 	pixel_size = round(vrt.GetGeoTransform()[1], 2)
@@ -90,7 +92,9 @@ def getFlightTiles(flight_shp, unit):
 	return flight_tiles
 
 def extractTilesFromMosaic(out_format, creation_ops, config, unit):
-	"""""" 
+	"""Using the bounding box of the input survey unit polygons to extract
+	tiles from the mosaic vrt and use the survey name (in conjunction with
+	other info) to name the tiles""" 
 
 	transform = createTranformation()
 	flight_tiles = getFlightTiles(flight14_shp, unit)
