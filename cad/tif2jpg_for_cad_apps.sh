@@ -109,15 +109,25 @@ production_dir='G:/AERIALS'
 staging_dir="${production_dir}/tempCurrent"
 current_dir="${production_dir}/Current"
 
-resolution='0.5' # feet
-six_inch_vrt="${project_dir}/vrt/six_inch_for_jpg.vrt"
+# # generate 6" jpeg's
+# resolution='0.5' # feet
+# six_inch_vrt="${project_dir}/vrt/six_inch_for_jpg.vrt"
 # buildMosaicVrt $six_inch_vrt $ospn_tiles $resolution;
 
-sections='SECTION'
-time extractJpgTiles $six_inch_vrt $staging_dir $sections;
+# sections='SECTION'
+# time extractJpgTiles $six_inch_vrt $staging_dir $sections;
 
-src_shp_dir='E:/admin'
-dst_shp_dir="${staging_dir}/shp"
-copyAerialShps $src_shp_dir $dst_shp_dir;
+# generate 3" jpeg's
+three_inch_vrt="${project_dir}/vrt/three_inch_for_jpg.vrt"
+# buildMosaicVrt $three_inch_vrt $ospn_tiles;
+
+qtr_sections='QTRSEC'
+time extractJpgTiles $three_inch_vrt $staging_dir $qtr_sections;
+
+# # finish up by transfering shapefiles, granting file permissions
+# # and moving the new files into place
+# src_shp_dir='E:/admin'
+# dst_shp_dir="${staging_dir}/shp"
+# copyAerialShps $src_shp_dir $dst_shp_dir;
 
 # updateGrantPermissionsToProduction;

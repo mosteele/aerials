@@ -36,6 +36,23 @@ def createTranformation():
 
 	return transform
 
+def getPixelSizeCode():
+	""""""
+
+	vrt = gdal.Open(vrt_path)
+	pixel_size = round(vrt.GetGeoTransform()[1], 2)
+
+	# the three inch images cover only a quarter of the area that
+	# the six inch and above do so the naming is different
+	pixel_dict = {
+		0.25: '_3in', 
+		0.5: 'u', 1: 'v',  2: 'w',
+		4: 'x',  10: 'y', 20: 'z'
+	}
+
+	return pixel_dict[pixel_size]
+
+
 def getFlightTiles(flight_shp, unit):
 	"""The photo flight was only flown over a subset of the units that 
 	exists in the survey unit datasets, based on the desired output unit
@@ -59,7 +76,7 @@ def getFlightTiles(flight_shp, unit):
 		with fiona.open(section_path) as sections:
 			metadata = sections.meta.copy()
 
-			section_name = '{0}_sections'.format(path.basename(flight_shp))
+			section_name = 'sections_{0}'.format(path.basename(flight_shp))
 			flight_tiles = path.join(project_dir, 'shp', section_name)
 			with fiona.open(flight_tiles, 'w', **metadata) as flight_sects:
 				for s in sections:
@@ -77,6 +94,7 @@ def extractTilesFromMosaic(out_format, creation_ops, config, unit):
 
 	transform = createTranformation()
 	flight_tiles = getFlightTiles(flight14_shp, unit)
+	pixel_code = getPixelSizeCode()
 
 	format_str = '-of "{0}"'.format(out_format)
 	creation_str = ' '.join(['-co "{0}"'.format(co) for co in creation_ops])
@@ -121,7 +139,8 @@ def extractTilesFromMosaic(out_format, creation_ops, config, unit):
 			if not path.exists(tile_sub_dir):
 				os.makedirs(tile_sub_dir)
 
-			tile_path = path.join(tile_sub_dir, '{0}.jpg'.format(survey_name))
+			tile_name = '{0}{1}.jpg'.format(survey_name, pixel_code)
+			tile_path = path.join(tile_sub_dir, tile_name)
 			gdal_cmd = gdal_template.format(format_str, projwin_str, 
 				creation_str, config_str, vrt_path, tile_path)
 			
@@ -136,7 +155,7 @@ def extractTilesFromMosaic(out_format, creation_ops, config, unit):
 # from command line parameters
 vrt_path = path.abspath(sys.argv[1])
 tile_dir = path.abspath(sys.argv[2])
-tile_unit = path.abspath(sys.argv[3])
+tile_unit = sys.argv[3]
 
 survey_dir = '//gisstore/gis/Rlis/TAXLOTS'
 project_dir = '//gisstore/gis/PUBLIC/GIS_Projects/Aerials'
@@ -148,6 +167,4 @@ flight14_shp = path.join(project_dir, 'shp', 'photo14.shp')
 out_format = 'JPEG'
 creation_ops = ['WORLDFILE=YES']
 config = ['GDAL_CACHEMAX 1000']
-unit = 'SECTION'
-
-extractTilesFromMosaic(out_format, creation_ops, config, unit)
+extractTilesFromMosaic(out_format, creation_ops, config, tile_unit)
