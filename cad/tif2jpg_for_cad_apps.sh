@@ -80,16 +80,22 @@ updateGrantPermissionsToProduction() {
 	msg2=$'aerials?  Press enter to continue, ctrl+c to quit:\n'
 	read -p "${msg1} ${msg2}"
 
-	# get the last modified year from a random jpeg in the current dir
-	random_jpg="$(ls -R ${current_dir}/*/*.jpg | head -n 1)"
+	# get the modification year from a random jpeg in the current dir
+	# h/t to http://stackoverflow.com/questions/701505/best-way-to-choose-a-random-file-from-a-directory-in-a-shell-script
+	old_jpgs=(${current_dir}/*/*.jpg)
+	random_jpg="${old_jpgs[RANDOM % ${#old_jpgs[@]}]}"
 	jpg_year="$(date +%Y -r $random_jpg)"
-	current_year="$(date +%Y)"
 
 	# if the data in the current directory was modified in the current
-	# year move it and replace it with the staging data
-	if [ "$jpeg_year" -lt "$current_year" ]; then
-		last_year="$(expr $jpeg_year - 1)"
-		mv -f $current_dir "${production_dir}/${last_year}_July"
+	# year move it and replace it with the staging data	
+	current_year="$(date +%Y)"
+	if [ "$jpg_year" -lt "$current_year" ]; then
+		last_year="$(expr $jpg_year - 1)"
+		
+		echo "mv $current_dir ${production_dir}/${last_year}_Summer_Jpg"
+		mv $current_dir "${production_dir}/${last_year}_Summer_Jpg"
+		
+		echo "mv $staging_dir $current_dir"
 		mv $staging_dir $current_dir
 
 		# Grant read and execute permissions on the production folder 
@@ -98,6 +104,7 @@ updateGrantPermissionsToProduction() {
 		# makes the action recurse to any children and '/q' flag 
 		# suppresses success messages.  Within double forward slashes the
 		# first slash escapes the second as this is a Windows command
+		echo 'granting file permissions...'
 		icacls ${current_dir} //grant:r Everyone:RX //t //q
 	fi
 }
@@ -109,25 +116,25 @@ production_dir='G:/AERIALS'
 staging_dir="${production_dir}/tempCurrent"
 current_dir="${production_dir}/Current"
 
-# # generate 6" jpeg's
-# resolution='0.5' # feet
-# six_inch_vrt="${project_dir}/vrt/six_inch_for_jpg.vrt"
-# buildMosaicVrt $six_inch_vrt $ospn_tiles $resolution;
+# generate 6" jpeg's
+resolution='0.5' # feet
+six_inch_vrt="${project_dir}/vrt/six_inch_for_jpg.vrt"
+buildMosaicVrt $six_inch_vrt $ospn_tiles $resolution;
 
-# sections='SECTION'
-# time extractJpgTiles $six_inch_vrt $staging_dir $sections;
+sections='SECTION'
+time extractJpgTiles $six_inch_vrt $staging_dir $sections;
 
 # generate 3" jpeg's
 three_inch_vrt="${project_dir}/vrt/three_inch_for_jpg.vrt"
-# buildMosaicVrt $three_inch_vrt $ospn_tiles;
+buildMosaicVrt $three_inch_vrt $ospn_tiles;
 
 qtr_sections='QTRSEC'
 time extractJpgTiles $three_inch_vrt $staging_dir $qtr_sections;
 
-# # finish up by transfering shapefiles, granting file permissions
-# # and moving the new files into place
-# src_shp_dir='E:/admin'
-# dst_shp_dir="${staging_dir}/shp"
-# copyAerialShps $src_shp_dir $dst_shp_dir;
+# finish up by transfering shapefiles, granting file permissions
+# and moving the new files into place
+src_shp_dir='E:/admin'
+dst_shp_dir="${staging_dir}/shp"
+copyAerialShps $src_shp_dir $dst_shp_dir;
 
-# updateGrantPermissionsToProduction;
+updateGrantPermissionsToProduction;
