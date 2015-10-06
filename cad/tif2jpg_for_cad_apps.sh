@@ -109,6 +109,20 @@ updateGrantPermissionsToProduction() {
 	fi
 }
 
+addJpwSpatialRefFile() {
+	# when gdal creates jpegs with a world file it puts them into a .wld
+	# file, however autocad will only read spatial reference information
+	# from .jpw file, the contents of the files is exactly the same, just
+	# a different file extension
+
+	wld_master_dir="$1"
+	for wld in $(find $wld_master_dir -name '*.wld'); do
+		jpw=${wld/%.wld/.jpw}
+		echo "cp $wld $jpw"
+		cp $wld $jpw
+	done
+}
+
 project_dir='G:/PUBLIC/GIS_Projects/Aerials'
 code_dir="${project_dir}/git/aerials"
 ospn_tiles="${project_dir}/oregon_spn_2014"
@@ -116,25 +130,26 @@ production_dir='G:/AERIALS'
 staging_dir="${production_dir}/tempCurrent"
 current_dir="${production_dir}/Current"
 
-# generate 6" jpeg's
-resolution='0.5' # feet
-six_inch_vrt="${project_dir}/vrt/six_inch_for_jpg.vrt"
-buildMosaicVrt $six_inch_vrt $ospn_tiles $resolution;
+# # generate 6" jpeg's
+# resolution='0.5' # feet
+# six_inch_vrt="${project_dir}/vrt/six_inch_for_jpg.vrt"
+# buildMosaicVrt $six_inch_vrt $ospn_tiles $resolution;
 
-sections='SECTION'
-time extractJpgTiles $six_inch_vrt $staging_dir $sections;
+# sections='SECTION'
+# time extractJpgTiles $six_inch_vrt $staging_dir $sections;
 
-# generate 3" jpeg's
-three_inch_vrt="${project_dir}/vrt/three_inch_for_jpg.vrt"
-buildMosaicVrt $three_inch_vrt $ospn_tiles;
+# # generate 3" jpeg's
+# three_inch_vrt="${project_dir}/vrt/three_inch_for_jpg.vrt"
+# buildMosaicVrt $three_inch_vrt $ospn_tiles;
 
-qtr_sections='QTRSEC'
-time extractJpgTiles $three_inch_vrt $staging_dir $qtr_sections;
+# qtr_sections='QTRSEC'
+# time extractJpgTiles $three_inch_vrt $staging_dir $qtr_sections;
 
-# finish up by transfering shapefiles, granting file permissions
-# and moving the new files into place
-src_shp_dir='E:/admin'
-dst_shp_dir="${staging_dir}/shp"
-copyAerialShps $src_shp_dir $dst_shp_dir;
+# # finish up by transfering shapefiles, granting file permissions
+# # and moving the new files into place
+# src_shp_dir='E:/admin'
+# dst_shp_dir="${staging_dir}/shp"
+# copyAerialShps $src_shp_dir $dst_shp_dir;
 
+addJpwSpatialRefFile $current_dir;
 updateGrantPermissionsToProduction;
