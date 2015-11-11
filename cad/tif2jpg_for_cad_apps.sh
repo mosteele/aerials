@@ -1,6 +1,6 @@
 # !/bin/bash
 
-# Grant Humphries for TriMet, 2014-15
+# Grant Humphries, 2014-15
 # GDAL version: 1.11.2
 # Python version: 2.7.8 (32-bit) 
 # ---------------------------------
