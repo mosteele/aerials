@@ -7,7 +7,7 @@
 
 buildMosaicVrt() {
 	# create a virtual mosaic of the geotiffs, this will be easier to work
-	# with than many separate files and eliminates the need too repeatedly
+	# with than many separate files and eliminates the need to repeatedly
 	# execute some of the later tasks
 
 	mosaic_vrt="$1"
@@ -123,20 +123,21 @@ addJpwSpatialRefFile() {
 	done
 }
 
-project_dir='G:/PUBLIC/GIS_Projects/Aerials'
+project_dir='G:/PUBLIC/SteeleM/Aerials'
 code_dir="${project_dir}/git/aerials"
-ospn_tiles="${project_dir}/oregon_spn_2014"
-production_dir='G:/AERIALS'
+ospn_tiles="${project_dir}/oregon_spn_2015"
+#production_dir='G:/AERIALS'
+production_dir = "${project_dir}/test"  #testing setting
 staging_dir="${production_dir}/tempCurrent"
 current_dir="${production_dir}/Current"
 
-# # generate 6" jpeg's
-# resolution='0.5' # feet
-# six_inch_vrt="${project_dir}/vrt/six_inch_for_jpg.vrt"
-# buildMosaicVrt $six_inch_vrt $ospn_tiles $resolution;
+# generate 6" jpeg's
+resolution='0.5' # feet
+six_inch_vrt="${project_dir}/vrt/six_inch_for_jpg.vrt"
+buildMosaicVrt $six_inch_vrt $ospn_tiles $resolution;
 
-# sections='SECTION'
-# time extractJpgTiles $six_inch_vrt $staging_dir $sections;
+sections='SECTION'
+time extractJpgTiles $six_inch_vrt $staging_dir $sections;
 
 # # generate 3" jpeg's
 # three_inch_vrt="${project_dir}/vrt/three_inch_for_jpg.vrt"

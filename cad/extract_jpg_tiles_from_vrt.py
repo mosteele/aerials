@@ -54,7 +54,6 @@ def getPixelSizeCode():
 
 	return pixel_dict[pixel_size]
 
-
 def getFlightTiles(flight_shp, unit):
 	"""The photo flight was only flown over a subset of the units that 
 	exists in the survey unit datasets, based on the desired output unit
@@ -97,7 +96,7 @@ def extractTilesFromMosaic(out_format, creation_ops, config, unit):
 	other info) to name the tiles""" 
 
 	transform = createTranformation()
-	flight_tiles = getFlightTiles(flight14_shp, unit)
+	flight_tiles = getFlightTiles(flight15_shp, unit)
 	pixel_code = getPixelSizeCode()
 
 	format_str = '-of "{0}"'.format(out_format)
@@ -162,8 +161,8 @@ tile_dir = path.abspath(sys.argv[2])
 tile_unit = sys.argv[3]
 
 survey_dir = '//gisstore/gis/Rlis/TAXLOTS'
-project_dir = '//gisstore/gis/PUBLIC/GIS_Projects/Aerials'
-flight14_shp = path.join(project_dir, 'shp', 'photo14.shp')
+project_dir = '//gisstore/gis/PUBLIC/SteeleM/Aerials'
+flight15_shp = path.join(project_dir, 'shp', 'photo15.shp')
 
 # creation option below (-co) reduce the size of the files (compress,
 # photometric) and internally tile them (tiled) so that smaller portions 
