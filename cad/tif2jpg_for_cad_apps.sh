@@ -82,13 +82,18 @@ updateGrantPermissionsToProduction() {
 
 	# get the modification year from a random jpeg in the current dir
 	# h/t to http://stackoverflow.com/questions/701505/best-way-to-choose-a-random-file-from-a-directory-in-a-shell-script
-	old_jpgs=(${current_dir}/*/*.jpg)
-	random_jpg="${old_jpgs[RANDOM % ${#old_jpgs[@]}]}"
-	jpg_year="$(date +%Y -r $random_jpg)"
+	
+	#old_jpgs=(${current_dir}/*/*.jpg)	
+	#random_jpg="${old_jpgs[RANDOM % ${#old_jpgs[@]}]}"
+	#jpg_year="$(date +%Y -r $random_jpg)"
+ 
+ ## HARD CODED - FIX ME LATER 
+ jpg_year=2015
 
 	# if the data in the current directory was modified in the current
 	# year move it and replace it with the staging data	
 	current_year="$(date +%Y)"
+	echo $current_year
 	if [ "$jpg_year" -lt "$current_year" ]; then
 		last_year="$(expr $jpg_year - 1)"
 		
@@ -127,7 +132,7 @@ project_dir='G:/PUBLIC/SteeleM/Aerials'
 code_dir="${project_dir}/git/aerials"
 ospn_tiles="${project_dir}/oregon_spn_2015"
 #production_dir='G:/AERIALS'
-production_dir = "${project_dir}/test"  #testing setting
+production_dir="${project_dir}/test"  #testing setting
 staging_dir="${production_dir}/tempCurrent"
 current_dir="${production_dir}/Current"
 
@@ -146,11 +151,11 @@ time extractJpgTiles $six_inch_vrt $staging_dir $sections;
 # qtr_sections='QTRSEC'
 # time extractJpgTiles $three_inch_vrt $staging_dir $qtr_sections;
 
-# # finish up by transfering shapefiles, granting file permissions
-# # and moving the new files into place
-# src_shp_dir='E:/admin'
-# dst_shp_dir="${staging_dir}/shp"
-# copyAerialShps $src_shp_dir $dst_shp_dir;
+# finish up by transfering shapefiles, granting file permissions
+# and moving the new files into place
+src_shp_dir='E:/admin'
+dst_shp_dir="${staging_dir}/shp"
+copyAerialShps $src_shp_dir $dst_shp_dir;
 
 addJpwSpatialRefFile $current_dir;
 updateGrantPermissionsToProduction;
