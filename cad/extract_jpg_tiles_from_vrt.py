@@ -13,18 +13,22 @@ from os import path
 from osgeo import gdal, ogr, osr
 from shapely.geometry import shape
 
+##!## HARD CODED HACK FOR 2015 IMAGES
+vrt_epsg = '6856'
+
 def createTranformation():
 	"""Create a transformation object from the oregon state plane north
 	to the input vrt projection if they are different"""
 	
 	transform = None
-
-	# Get the epsg of the projected coordinate system of the input vrt
-	vrt = gdal.Open(vrt_path)
-	vrt_prj = vrt.GetProjection()
-	vrt_srs = osr.SpatialReference(wkt=vrt_prj)
-	vrt_epsg = vrt_srs.GetAuthorityCode(None)
-
+ 
+ ## 2015 EPSG code can't be accessed this way
+	# # Get the epsg of the projected coordinate system of the input vrt
+	# vrt = gdal.Open(vrt_path)
+	# vrt_prj = vrt.GetProjection()
+	# vrt_srs = osr.SpatialReference(wkt=vrt_prj)
+	# #vrt_epsg = vrt_srs.GetAuthorityCode(None)  
+ 
 	if vrt_epsg != '2913':
 		s_srs = osr.SpatialReference()
 		s_srs.ImportFromEPSG(2913)
@@ -70,7 +74,7 @@ def getFlightTiles(flight_shp, unit):
 		sections_set = set()
 		with fiona.open(flight_shp) as flight:
 			for ft in flight:
-				s_id = ft['properties']['QTRSEC'][:-1]
+				s_id = ft['properties']['SECTION'][:-1]
 				sections_set.add(s_id)
 
 		section_path = path.join(survey_dir, unit_dict[unit])
