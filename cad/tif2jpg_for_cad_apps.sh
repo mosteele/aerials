@@ -128,9 +128,9 @@ addJpwSpatialRefFile() {
 	done
 }
 
-project_dir='G:/PUBLIC/SteeleM/Aerials'
+project_dir="G:/PUBLIC/SteeleM/Aerials"
 code_dir="${project_dir}/git/aerials"
-ospn_tiles="${project_dir}/oregon_spn_2015"
+ospn_tiles="G:/AERIALS/2015_July/6in"
 #production_dir='G:/AERIALS'
 production_dir="${project_dir}/test"  #testing setting
 staging_dir="${production_dir}/tempCurrent"
@@ -142,7 +142,7 @@ six_inch_vrt="${project_dir}/vrt/six_inch_for_jpg.vrt"
 buildMosaicVrt $six_inch_vrt $ospn_tiles $resolution;
 
 sections='SECTION'
-time extractJpgTiles $six_inch_vrt $staging_dir $sections;
+extractJpgTiles $six_inch_vrt $staging_dir $sections;
 
 # # generate 3" jpeg's
 # three_inch_vrt="${project_dir}/vrt/three_inch_for_jpg.vrt"
@@ -153,9 +153,9 @@ time extractJpgTiles $six_inch_vrt $staging_dir $sections;
 
 # finish up by transfering shapefiles, granting file permissions
 # and moving the new files into place
-src_shp_dir='E:/admin'
-dst_shp_dir="${staging_dir}/shp"
-copyAerialShps $src_shp_dir $dst_shp_dir;
+# src_shp_dir='E:/admin'
+# dst_shp_dir="${staging_dir}/shp"
+# copyAerialShps $src_shp_dir $dst_shp_dir;
 
-addJpwSpatialRefFile $current_dir;
-updateGrantPermissionsToProduction;
+# addJpwSpatialRefFile $current_dir;
+# updateGrantPermissionsToProduction;
